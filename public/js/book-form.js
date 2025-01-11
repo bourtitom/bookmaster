@@ -9,6 +9,36 @@ document.addEventListener('DOMContentLoaded', function() {
     let isSubmitting = false; // Flag pour éviter la double soumission
     let currentBookId = null; // ID du livre en cours d'édition
     
+    // Gérer le changement de livre pour mettre à jour la catégorie
+    const bookSelect = form.querySelector('[name="user_book[book]"]');
+    const categorySelect = form.querySelector('[name="user_book[category]"]');
+    
+    if (bookSelect && categorySelect) {
+        bookSelect.addEventListener('change', async function() {
+            const selectedBookId = this.value;
+            if (!selectedBookId) {
+                categorySelect.value = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/book/${selectedBookId}/category`);
+                const data = await response.json();
+                
+                if (response.ok && data.category) {
+                    // Trouver l'option avec le bon texte
+                    const options = Array.from(categorySelect.options);
+                    const option = options.find(opt => opt.textContent === data.category);
+                    if (option) {
+                        categorySelect.value = option.value;
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur lors de la récupération de la catégorie:', error);
+            }
+        });
+    }
+    
     // Gérer le clic sur un livre
     const bookLinks = document.querySelectorAll('.book-edit');
     console.log('Nombre de liens trouvés:', bookLinks.length);
@@ -42,18 +72,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 const ratingInput = form.querySelector('[name="user_book[rating]"]');
                 const isFinishedInput = form.querySelector('[name="user_book[isFinished]"]');
                 const notesInput = form.querySelector('[name="user_book[notes]"]');
+                const categorySelect = form.querySelector('[name="user_book[category]"]');
                 
                 console.log('Éléments du formulaire:', {
                     bookSelect: bookSelect ? 'trouvé' : 'non trouvé',
                     ratingInput: ratingInput ? 'trouvé' : 'non trouvé',
                     isFinishedInput: isFinishedInput ? 'trouvé' : 'non trouvé',
-                    notesInput: notesInput ? 'trouvé' : 'non trouvé'
+                    notesInput: notesInput ? 'trouvé' : 'non trouvé',
+                    categorySelect: categorySelect ? 'trouvé' : 'non trouvé'
                 });
                 
-                if (bookSelect) bookSelect.value = data.book.bookId;
+                if (bookSelect) {
+                    bookSelect.value = data.book.bookId;
+                    // Déclencher l'événement change pour mettre à jour la catégorie
+                    bookSelect.dispatchEvent(new Event('change'));
+                }
                 if (ratingInput) ratingInput.value = data.book.rating || '';
                 if (isFinishedInput) isFinishedInput.checked = data.book.isFinished;
                 if (notesInput) notesInput.value = data.book.notes || '';
+                if (categorySelect && data.book.categoryId) {
+                    categorySelect.value = data.book.categoryId;
+                }
                 
                 const modal = document.getElementById('book_modal');
                 console.log('Modal trouvé:', modal ? 'oui' : 'non');
@@ -179,48 +218,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (responseData.success) {
-                // Mettre à jour le tableau
-                if (responseData.html) {
-                    const tableBody = document.querySelector(currentBookId ? '#finished-books-table tbody' : '#current-books-table tbody');
-                    if (!currentBookId) {
-                        // Pour un nouveau livre, ajouter au début
-                        tableBody.insertAdjacentHTML('afterbegin', responseData.html);
-                    } else {
-                        // Pour une modification, remplacer la ligne existante
-                        const existingRow = document.querySelector(`[data-book-id="${currentBookId}"]`).closest('tr');
-                        existingRow.outerHTML = responseData.html;
-                    }
-                }
-
-                // Afficher un message de confirmation
-                const message = document.createElement('div');
-                message.className = 'alert alert-success alert-dismissible fade show fixed top-4 right-4 z-50';
-                message.innerHTML = `
-                    <div class="alert-content">
-                        <div class="alert-title">Succès!</div>
-                        <div class="alert-text">Le livre a été ${currentBookId ? 'modifié' : 'ajouté'} avec succès.</div>
-                    </div>
-                    <button type="button" class="btn btn-icon btn-sm btn-clear" data-bs-dismiss="alert">
-                        <i class="ki-duotone ki-cross fs-2">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-                    </button>
-                `;
-                document.body.appendChild(message);
-                setTimeout(() => message.remove(), 3000);
-
-                // Fermer la modal
-                const modal = document.querySelector('#book_modal');
+                const modal = document.getElementById('book_modal');
                 if (modal) {
+                    modal.classList.remove('open');
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    
                     const backdrop = document.querySelector('.modal-backdrop');
-                    modal.classList.remove('show');
-                    if (backdrop) backdrop.remove();
-                    modal.style.display = 'none';
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    setTimeout(() => {
+                        modal.style.display = '';
+                    }, 150);
                 }
                 
-                form.reset();
-                currentBookId = null;
+                // Rafraîchir la page pour mettre à jour les tables
+                window.location.reload();
             } else {
                 alert(responseData.errors.join('\n'));
             }
@@ -249,6 +263,7 @@ function fillBookForm(bookId) {
                 const notesInput = form.querySelector('[name="user_book[notes]"]');
                 const ratingInput = form.querySelector('[name="user_book[rating]"]');
                 const isFinishedInput = form.querySelector('[name="user_book[isFinished]"]');
+                const categorySelect = form.querySelector('[name="user_book[category]"]');
                 
                 // Extraire les données correctement
                 const bookData = data.book || data;
@@ -257,6 +272,9 @@ function fillBookForm(bookId) {
                 if (notesInput) notesInput.value = bookData.notes || '';
                 if (ratingInput) ratingInput.value = bookData.rating || '';
                 if (isFinishedInput) isFinishedInput.checked = bookData.isFinished;
+                if (categorySelect && bookData.categoryId) {
+                    categorySelect.value = bookData.categoryId;
+                }
                 
                 // Ouvrir la modal
                 const modal = document.getElementById('book_modal');
