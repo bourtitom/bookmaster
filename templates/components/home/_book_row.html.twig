@@ -1,0 +1,45 @@
+{% if userBook.isFinished %}
+    <tr>
+        <td>
+            <div class="flex flex-col gap-2">
+                <a class="leading-none font-medium text-sm text-gray-900 hover:text-primary"
+                   href="#">
+                    {{ userBook.book.name }}
+                </a>
+                <span class="text-2sm text-gray-700 font-normal leading-3">
+                    {{ userBook.notes|default('Aucune note') }}
+                </span>
+            </div>
+        </td>
+        <td>
+            <div class="rating">
+                {% for i in 1..5 %}
+                    <div class="rating-label {{ i <= userBook.rating ? 'checked' : '' }}">
+                        <i class="rating-on ki-solid ki-star text-base leading-none"></i>
+                        <i class="rating-off ki-outline ki-star text-base leading-none"></i>
+                    </div>
+                {% endfor %}
+            </div>
+        </td>
+        <td class="text-end">
+            {{ userBook.updatedAt|date('d/m/Y à H:i') }}
+        </td>
+    </tr>
+{% else %}
+    <tr>
+        <td>
+            <div class="flex flex-col gap-2">
+                <a class="leading-none font-medium text-sm text-gray-900 hover:text-primary"
+                   href="#">
+                    {{ userBook.book.name }}
+                </a>
+                <span class="text-2sm text-gray-700 font-normal leading-3">
+                    {{ userBook.notes|default('Aucune note') }}
+                </span>
+            </div>
+        </td>
+        <td class="text-end">
+            {{ userBook.updatedAt|date('d/m/Y à H:i') }}
+        </td>
+    </tr>
+{% endif %}

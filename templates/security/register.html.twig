@@ -1,0 +1,121 @@
+{% extends 'auth.html.twig' %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block body %}
+<div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
+    <div class="card max-w-[370px] w-full">
+        <div class="card-body flex flex-col gap-5 p-10">
+            <div class="text-center mb-2.5">
+                <h3 class="text-lg font-medium text-gray-900 leading-none mb-2.5">
+                    Inscription
+                </h3>
+                <div class="flex items-center justify-center">
+                    <span class="text-2sm text-gray-700 me-1.5">
+                        Vous avez déjà un compte ?
+                    </span>
+                    <a class="text-2sm link" href="{{ path('app_login') }}">
+                        Me connecter
+                    </a>
+                </div>
+            </div>
+
+            {# Affichage des erreurs #}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+
+            {# Affichage des succès #}
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+
+            {{ form_start(registrationForm, {'attr': {'class': 'flex flex-col gap-5', 'novalidate': 'novalidate', 'id': 'registration-form'}}) }}
+            
+            <div class="flex flex-col gap-1">
+                {{ form_label(registrationForm.email, 'Email', {'label_attr': {'class': 'form-label text-gray-900'}}) }}
+                {{ form_widget(registrationForm.email, {
+                    'attr': {
+                        'class': 'input' ~ (form_errors(registrationForm.email) ? ' is-invalid' : ''),
+                        'placeholder': 'Adresse email'
+                    }
+                }) }}
+                {% if form_errors(registrationForm.email) %}
+                    <div class="invalid-feedback">
+                        {{ form_errors(registrationForm.email) }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-col gap-1">
+                {{ form_label(registrationForm.plainPassword.first, 'Mot de passe', {'label_attr': {'class': 'form-label font-normal text-gray-900'}}) }}
+                <div class="input" data-toggle-password="true">
+                    {{ form_widget(registrationForm.plainPassword.first, {
+                        'attr': {
+                            'class': (form_errors(registrationForm.plainPassword.first) ? ' is-invalid' : ''),
+                            'placeholder': 'Mot de passe'
+                        }
+                    }) }}
+                    <button class="btn btn-icon" data-toggle-password-trigger="true" type="button">
+                        <i class="ki-filled ki-eye text-gray-500 toggle-password-active:hidden"></i>
+                        <i class="ki-filled ki-eye-slash text-gray-500 hidden toggle-password-active:block"></i>
+                    </button>
+                </div>
+                {% if form_errors(registrationForm.plainPassword.first) %}
+                    <div class="invalid-feedback">
+                        {{ form_errors(registrationForm.plainPassword.first) }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-col gap-1">
+                {{ form_label(registrationForm.plainPassword.second, 'Confirmer le mot de passe', {'label_attr': {'class': 'form-label font-normal text-gray-900'}}) }}
+                <div class="input" data-toggle-password="true">
+                    {{ form_widget(registrationForm.plainPassword.second, {
+                        'attr': {
+                            'class': (form_errors(registrationForm.plainPassword.second) ? ' is-invalid' : ''),
+                            'placeholder': 'Confirmez le mot de passe'
+                        }
+                    }) }}
+                    <button class="btn btn-icon" data-toggle-password-trigger="true" type="button">
+                        <i class="ki-filled ki-eye text-gray-500 toggle-password-active:hidden"></i>
+                        <i class="ki-filled ki-eye-slash text-gray-500 hidden toggle-password-active:block"></i>
+                    </button>
+                </div>
+                {% if form_errors(registrationForm.plainPassword.second) %}
+                    <div class="invalid-feedback">
+                        {{ form_errors(registrationForm.plainPassword.second) }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary flex justify-center grow">S'inscrire</button>
+
+            {{ form_end(registrationForm) }}
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePasswordButtons = document.querySelectorAll('[data-toggle-password-trigger]');
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const container = this.closest('[data-toggle-password]');
+            const input = container.querySelector('input');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            container.classList.toggle('toggle-password-active');
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

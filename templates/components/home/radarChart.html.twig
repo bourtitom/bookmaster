@@ -1,0 +1,125 @@
+<div class="card h-full">
+    <div class="card-header">
+        <h3 class="card-title">
+            Répartition de mes lectures
+        </h3>
+    </div>
+    <div class="card-body flex flex-col gap-5">
+        <div id="category-chart" style="min-height: 350px;"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var options = {
+            series: {{ categoryStats.data|json_encode|raw }},
+            chart: {
+                type: 'donut',
+                height: 350,
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: true,
+                        selection: false,
+                        zoom: false,
+                        zoomin: false,
+                        zoomout: false,
+                        pan: false,
+                        reset: false
+                    },
+                    export: {
+                        csv: {
+                            filename: 'statistiques-lectures',
+                            columnDelimiter: ',',
+                            headerCategory: 'Catégorie',
+                            headerValue: 'Nombre de livres'
+                        },
+                        svg: {
+                            filename: 'statistiques-lectures'
+                        },
+                        png: {
+                            filename: 'statistiques-lectures'
+                        }
+                    }
+                },
+                fontFamily: 'Inter, sans-serif'
+            },
+            labels: {{ categoryStats.labels|json_encode|raw }},
+            colors: ['#FF4560', '#00E396', '#008FFB', '#FEB019', '#775DD0', '#2B908F', '#F86624', '#A9A9A9'],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                fontSize: '14px',
+                                fontFamily: 'Inter, sans-serif',
+                                color: '#2D3748',
+                                offsetY: -10
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '16px',
+                                fontFamily: 'Inter, sans-serif',
+                                color: '#2D3748',
+                                offsetY: 16,
+                                formatter: function (val) {
+                                    return Math.round(val) + ' livre(s)';
+                                }
+                            },
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                color: '#2D3748',
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0) + ' livres';
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center',
+                fontSize: '12px',
+                fontFamily: 'Inter, sans-serif',
+                markers: {
+                    width: 8,
+                    height: 8,
+                    radius: 4
+                },
+                itemMargin: {
+                    horizontal: 8,
+                    vertical: 5
+                }
+            },
+            stroke: {
+                show: false
+            },
+            dataLabels: {
+                enabled: false
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        height: 300
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }]
+        };
+
+        try {
+            var chart = new ApexCharts(document.querySelector("#category-chart"), options);
+            chart.render();
+        } catch (error) {
+            console.error('Error initializing category chart:', error);
+        }
+    });
+</script>
