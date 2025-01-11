@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Doctrine\ORM\EntityRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class UserBookType extends AbstractType
 {
@@ -29,7 +30,13 @@ class UserBookType extends AbstractType
                         ->orderBy('b.name', 'ASC');
                 },
                 'attr' => [
-                    'class' => 'select'
+                    'class' => 'select',
+                    'data-validation-message' => 'Veuillez sélectionner un livre'
+                ],
+                'constraints' => [
+                    new Assert\NotBlank([
+                        'message' => 'Veuillez sélectionner un livre'
+                    ])
                 ]
             ])
             ->add('notes', TextareaType::class, [
@@ -37,7 +44,14 @@ class UserBookType extends AbstractType
                 'label' => 'Mes notes',
                 'attr' => [
                     'class' => 'textarea',
-                    'placeholder' => 'Notez-ici les idées importantes de l\'oeuvre.'
+                    'placeholder' => 'Notez-ici les idées importantes de l\'oeuvre.',
+                    'data-validation-message' => 'Les notes ne peuvent pas dépasser 1000 caractères'
+                ],
+                'constraints' => [
+                    new Assert\Length([
+                        'max' => 1000,
+                        'maxMessage' => 'Les notes ne peuvent pas dépasser {{ limit }} caractères'
+                    ])
                 ]
             ])
             ->add('rating', ChoiceType::class, [

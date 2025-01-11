@@ -179,162 +179,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (responseData.success) {
-                const modal = document.getElementById('book_modal');
-                if (modal) {
-                    modal.classList.remove('open');
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = '';
-                    
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) {
-                        backdrop.remove();
-                    }
-                    setTimeout(() => {
-                        modal.style.display = '';
-                    }, 150);
-                }
-                
-                const isFinished = form.querySelector('[name="user_book[isFinished]"]').checked;
-                console.log('État isFinished:', isFinished);
-                
-                // Supprimer de l'ancienne table
-                const oldTableId = currentBookId ? (isFinished ? 'read-books-table' : 'current-books-table') : null;
-                if (oldTableId) {
-                    const oldTable = document.querySelector(`#${oldTableId} tbody`);
-                    if (oldTable) {
-                        console.log('Recherche de la ligne à supprimer avec ID:', responseData.book.id);
-                        const oldRow = oldTable.querySelector(`a[data-book-id="${responseData.book.id}"]`)?.closest('tr');
-                        if (oldRow) {
-                            console.log('Suppression de la ligne de la table:', oldTableId);
-                            oldRow.remove();
-                        } else {
-                            console.log('Ligne non trouvée dans la table:', oldTableId);
-                        }
-                    }
-                }
-
-                // Ajouter à la nouvelle table (ou la même table si on ne change pas de statut)
-                const targetTableId = isFinished ? 'read-books-table' : 'current-books-table';
-                console.log('Table cible:', targetTableId);
-                const targetTable = document.querySelector(`#${targetTableId} tbody`);
-                
-                if (targetTable) {
-                    const newRow = document.createElement('tr');
-                    // Extraire les données correctement selon la structure de la réponse
-                    const bookData = responseData.book || responseData;
-                    
-                    // Ajouter la date actuelle si elle n'existe pas
-                    if (!bookData.updatedAt) {
-                        bookData.updatedAt = new Date().toISOString();
-                    }
-
-                    console.log('Response complète:', JSON.stringify(responseData, null, 2));
-                    console.log('BookData après extraction:', bookData);
-                    console.log('Book name:', bookData.book?.name);
-                    console.log('Dates disponibles:', {
-                        createdAt: bookData.createdAt,
-                        updatedAt: bookData.updatedAt,
-                        created_at: bookData.created_at,
-                        updated_at: bookData.updated_at,
-                        date: bookData.date,
-                        modifiedAt: bookData.modifiedAt,
-                        modified_at: bookData.modified_at,
-                        modified: bookData.modified
-                    });
-
-                    const getBookTitle = (data) => {
-                        if (data.book && data.book.name) {
-                            return data.book.name;
-                        }
-                        if (data.title) {  
-                            return data.title;
-                        }
-                        if (data.name) {
-                            return data.name;
-                        }
-                        return 'Aucun titre';
-                    };
-
-                    const formatDate = (dateString) => {
-                        if (!dateString) return '';
-                        try {
-                            const date = new Date(dateString);
-                            if (isNaN(date.getTime())) return '';
-                            
-                            // Ajouter une heure pour compenser le décalage
-                            date.setHours(date.getHours() - 1);
-                            
-                            // Formater la date et l'heure séparément
-                            const dateOptions = {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                            };
-                            
-                            const timeOptions = {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            };
-                            
-                            const datePart = date.toLocaleDateString('fr-FR', dateOptions);
-                            const timePart = date.toLocaleTimeString('fr-FR', timeOptions);
-                            
-                            // Combiner avec un 'à'
-                            return `${datePart} à ${timePart}`;
-                        } catch (e) {
-                            console.error('Erreur de formatage de date:', e);
-                            return 'Aucune Date';
-                        }
-                    };
-
-                    const getDate = (data) => {
-                        if (data.created_at) return data.created_at;
-                        if (data.updated_at) return data.updated_at;
-                        if (data.createdAt) return data.createdAt;
-                        if (data.updatedAt) return data.updatedAt;
-                        return 'Aucune Date';
-                    };
-
-                    const generateRatingStars = (rating) => {
-                        let starsHtml = '<div class="rating">';
-                        for (let i = 1; i <= 5; i++) {
-                            starsHtml += `
-                                <div class="rating-label ${i <= rating ? 'checked' : ''}">
-                                    <i class="rating-on ki-solid ki-star text-base leading-none"></i>
-                                    <i class="rating-off ki-outline ki-star text-base leading-none"></i>
-                                </div>`;
-                        }
-                        starsHtml += '</div>';
-                        return starsHtml;
-                    };
-
-                    // Construire le HTML de base avec le titre et les notes
-                    const baseHtml = `
-                        <td>
-                            <div class="flex flex-col gap-2">
-                                <a class="leading-none font-medium text-sm text-gray-900 hover:text-primary book-edit"
-                                   href="#"
-                                   data-book-id="${bookData.id}">
-                                    ${getBookTitle(bookData)}
-                                </a>
-                                <span class="text-2sm text-gray-700 font-normal leading-3">
-                                    ${bookData.notes || 'Aucune note'}
-                                </span>
-                            </div>
-                        </td>`;
-
-                    // Ajouter les colonnes supplémentaires pour la table des livres terminés
-                    if (isFinished) {
-                        newRow.innerHTML = baseHtml + `
-                            <td>${generateRatingStars(bookData.rating)}</td>
-                            <td class="text-end">${formatDate(getDate(bookData))}</td>`;
+                // Mettre à jour le tableau
+                if (responseData.html) {
+                    const tableBody = document.querySelector(currentBookId ? '#finished-books-table tbody' : '#current-books-table tbody');
+                    if (!currentBookId) {
+                        // Pour un nouveau livre, ajouter au début
+                        tableBody.insertAdjacentHTML('afterbegin', responseData.html);
                     } else {
-                        newRow.innerHTML = baseHtml + `
-                            <td class="text-end">${formatDate(getDate(bookData))}</td>`;
+                        // Pour une modification, remplacer la ligne existante
+                        const existingRow = document.querySelector(`[data-book-id="${currentBookId}"]`).closest('tr');
+                        existingRow.outerHTML = responseData.html;
                     }
-                    
-                    targetTable.appendChild(newRow);
-                    console.log('Nouvelle ligne ajoutée à la table:', targetTableId);
+                }
+
+                // Afficher un message de confirmation
+                const message = document.createElement('div');
+                message.className = 'alert alert-success alert-dismissible fade show fixed top-4 right-4 z-50';
+                message.innerHTML = `
+                    <div class="alert-content">
+                        <div class="alert-title">Succès!</div>
+                        <div class="alert-text">Le livre a été ${currentBookId ? 'modifié' : 'ajouté'} avec succès.</div>
+                    </div>
+                    <button type="button" class="btn btn-icon btn-sm btn-clear" data-bs-dismiss="alert">
+                        <i class="ki-duotone ki-cross fs-2">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </button>
+                `;
+                document.body.appendChild(message);
+                setTimeout(() => message.remove(), 3000);
+
+                // Fermer la modal
+                const modal = document.querySelector('#book_modal');
+                if (modal) {
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    modal.classList.remove('show');
+                    if (backdrop) backdrop.remove();
+                    modal.style.display = 'none';
                 }
                 
                 form.reset();
